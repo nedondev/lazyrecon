@@ -111,7 +111,7 @@ recon(){
 
   echo "${green}Recon started on $domain ${reset}"
   echo "Listing subdomains using sublister..."
-  python ~/tools/Sublist3r/sublist3r.py -d $domain -t 10 -v -o ./$domain/$foldername/$domain.txt > /dev/null
+  python ~/tools/Sublist3r/sublist3r.py -d $domain -t 10 -v -o ./$domain/$foldername/$domain.txt # > /dev/null
   echo "Checking certspotter..."
   curl -s https://certspotter.com/api/v0/certs\?domain\=$domain | jq '.[].dns_names[]' | sed 's/\"//g' | sed 's/\*\.//g' | sort -u | grep $domain >> ./$domain/$foldername/$domain.txt
   nsrecords $domain
@@ -123,18 +123,22 @@ recon(){
 }
 
 excludedomains(){
-  # from @incredincomp with love <3
-  echo "Excluding domains (if you set them with -e)..."
-  IFS=$'\n'
-  # prints the $excluded array to excluded.txt with newlines 
-  printf "%s\n" "${excluded[*]}" > ./$domain/$foldername/excluded.txt
-  # this form of grep takes two files, reads the input from the first file, finds in the second file and removes
-  grep -vFf ./$domain/$foldername/excluded.txt ./$domain/$foldername/alldomains.txt > ./$domain/$foldername/alldomains2.txt
-  mv ./$domain/$foldername/alldomains2.txt ./$domain/$foldername/alldomains.txt
-  #rm ./$domain/$foldername/excluded.txt # uncomment to remove excluded.txt, I left for testing purposes
-  echo "Subdomains that have been excluded from discovery:"
-  printf "%s\n" "${excluded[@]}"
-  unset IFS
+	if [ -z "$excluded" ]; then
+        echo "No domains have been excluded."
+	else
+	    # from @incredincomp with love <3 SORRY!!
+        echo "Excluding domains (if you set them with -e)..."
+        IFS=$'\n'
+        # prints the $excluded array to excluded.txt with newlines
+        printf "%s\n" "${excluded[*]}" > ./$domain/$foldername/excluded.txt
+        # this form of grep takes two files, reads the input from the first file, finds in the second file and removes
+        grep -vFf ./$domain/$foldername/excluded.txt ./$domain/$foldername/alldomains.txt > ./$domain/$foldername/alldomains2.txt
+        mv ./$domain/$foldername/alldomains2.txt ./$domain/$foldername/alldomains.txt
+        #rm ./$domain/$foldername/excluded.txt # uncomment to remove excluded.txt, I left for testing purposes
+        echo "Subdomains that have been excluded from discovery:"
+        printf "%s\n" "${excluded[@]}"
+        unset IFS
+    fi
 }
 
 dirsearcher(){
